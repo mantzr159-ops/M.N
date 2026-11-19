@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة تحكم المتجر</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+  <header class="header">
+    <div class="container header__inner">
+      <a href="admin.html" class="logo">M.N<span>لوحة التحكم</span></a>
+      <a href="index.html" class="btn btn--ghost" target="_blank" rel="noopener">عرض المتجر ↗</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="stats" id="stats"></section>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" role="tab" data-tab="products">المنتجات</button>
+      <button class="tab" role="tab" data-tab="categories">التصنيفات</button>
+      <button class="tab" role="tab" data-tab="data">النسخ الاحتياطي</button>
+    </nav>
+
+    <!-- Products -->
+    <section class="panel" id="tab-products">
+      <div class="panel__bar">
+        <input id="pSearch" type="search" class="input" placeholder="ابحث بالاسم…">
+        <select id="pCat" class="input"></select>
+        <button class="btn btn--primary" id="newProduct">+ منتج جديد</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>المنتج</th><th>التصنيف</th><th>السعر</th><th>المخزون</th><th>التقييم</th><th></th></tr>
+          </thead>
+          <tbody id="pRows"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="pEmpty" hidden>لا توجد منتجات.</p>
+    </section>
+
+    <!-- Categories -->
+    <section class="panel" id="tab-categories" hidden>
+      <form class="panel__bar" id="catForm">
+        <input name="name" class="input" placeholder="اسم التصنيف الجديد" required maxlength="40">
+        <button class="btn btn--primary">+ إضافة تصنيف</button>
+      </form>
+      <ul class="cat-list" id="catList"></ul>
+    </section>
+
+    <!-- Data -->
+    <section class="panel" id="tab-data" hidden>
+      <div class="data-grid">
+        <div class="box">
+          <h3>تصدير نسخة احتياطية</h3>
+          <p>حمّل كل المنتجات والتصنيفات كملف JSON لحفظها أو نقلها إلى جهاز آخر.</p>
+          <button class="btn btn--primary" id="exportJson">تحميل JSON</button>
+        </div>
+        <div class="box">
+          <h3>استيراد نسخة</h3>
+          <p>ارفع ملف JSON سبق تصديره. سيستبدل البيانات الحالية.</p>
+          <label class="btn btn--ghost">اختيار ملف<input type="file" id="importJson" accept="application/json,.json" hidden></label>
+        </div>
+        <div class="box">
+          <h3>نشر التعديلات للزوار</h3>
+          <p>التعديلات تُحفظ في هذا المتصفح فقط. لتظهر لكل الزوار، حمّل ملف <code>products.js</code> واستبدل به الملف الموجود في المشروع.</p>
+          <button class="btn btn--primary" id="exportJs">تحميل products.js</button>
+        </div>
+        <div class="box box--danger">
+          <h3>استعادة الافتراضي</h3>
+          <p>حذف كل التعديلات والعودة إلى المنتجات الأصلية في <code>products.js</code>.</p>
+          <button class="btn btn--danger" id="resetData">استعادة</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="modal" id="modal">
+    <button class="icon-btn modal__close" data-close aria-label="إغلاق">✕</button>
+    <form class="checkout" id="productForm" novalidate>
+      <h2 id="formTitle">منتج جديد</h2>
+      <div class="img-pick">
+        <div class="img-pick__preview" id="imgPreview"></div>
+        <div class="img-pick__actions">
+          <label class="btn btn--ghost">رفع صورة<input type="file" id="imgInput" accept="image/*" hidden></label>
+          <button type="button" class="btn btn--ghost" id="imgRemove">إزالة الصورة</button>
+          <small>بدون صورة يُعرض الرمز التعبيري على خلفية اللون المختار.</small>
+        </div>
+      </div>
+      <div class="fields">
+        <label class="full">اسم المنتج *<input name="name" required maxlength="80"></label>
+        <label>التصنيف *<select name="category" required></select></label>
+        <label>السعر (ر.س) *<input name="price" type="number" min="0" step="0.01" required></label>
+        <label>السعر قبل الخصم<input name="oldPrice" type="number" min="0" step="0.01" placeholder="اختياري"></label>
+        <label>الكمية في المخزون<input name="stock" type="number" min="0" step="1" placeholder="فارغ = غير محدود"></label>
+        <label>التقييم (0–5)<input name="rating" type="number" min="0" max="5" step="0.1" value="5"></label>
+        <label>الرمز التعبيري<input name="emoji" maxlength="8" value="📦"></label>
+        <label>لون الخلفية<input name="color" type="color" value="#eef2ff"></label>
+        <label class="full">الوصف<textarea name="desc" rows="3" maxlength="500"></textarea></label>
+      </div>
+      <p class="form-error" id="formError" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" data-close>إلغاء</button>
+        <button class="btn btn--primary" type="submit">حفظ</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="products.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

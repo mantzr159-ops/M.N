@@ -1,5 +1,5 @@
-// بيانات المنتجات — عدّل هذا الملف لإضافة منتجاتك
-window.CATEGORIES = [
+// البيانات الافتراضية للمتجر. أي تعديل من لوحة التحكم (admin.html) يُحفظ في المتصفح ويتقدّم على هذه القيم.
+window.DEFAULT_CATEGORIES = [
   { id: "all", name: "الكل" },
   { id: "electronics", name: "إلكترونيات" },
   { id: "fashion", name: "أزياء" },
@@ -8,7 +8,7 @@ window.CATEGORIES = [
   { id: "sports", name: "رياضة" },
 ];
 
-window.PRODUCTS = [
+window.DEFAULT_PRODUCTS = [
   { id: 1, name: "سماعات لاسلكية", category: "electronics", price: 249, oldPrice: 320, rating: 4.7, emoji: "🎧", color: "#e0e7ff", desc: "سماعات بلوتوث بعزل ضوضاء نشط وبطارية تدوم حتى 30 ساعة." },
   { id: 2, name: "ساعة ذكية", category: "electronics", price: 399, rating: 4.5, emoji: "⌚", color: "#dbeafe", desc: "تتبع اللياقة ونبضات القلب والنوم، مقاومة للماء." },
   { id: 3, name: "شاحن سريع 65 واط", category: "electronics", price: 89, rating: 4.3, emoji: "🔌", color: "#e0f2fe", desc: "شاحن GaN صغير الحجم بثلاثة منافذ لجميع أجهزتك." },
@@ -26,3 +26,16 @@ window.PRODUCTS = [
   { id: 15, name: "دمبل قابل للتعديل", category: "sports", price: 379, rating: 4.5, emoji: "🏋️", color: "#d1fae5", desc: "أوزان من 2 إلى 24 كجم في جهاز واحد." },
   { id: 16, name: "قارورة ماء حرارية", category: "sports", price: 69, rating: 4.7, emoji: "🥤", color: "#cffafe", desc: "تحافظ على البرودة 24 ساعة والسخونة 12 ساعة." },
 ];
+
+// تحميل البيانات المحفوظة من لوحة التحكم إن وُجدت
+(function () {
+  function load(key, fallback) {
+    try {
+      const v = JSON.parse(localStorage.getItem(key));
+      return Array.isArray(v) ? v : fallback;
+    } catch (e) { return fallback; }
+  }
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  window.CATEGORIES = load("mn-categories", clone(window.DEFAULT_CATEGORIES));
+  window.PRODUCTS = load("mn-products", clone(window.DEFAULT_PRODUCTS));
+})();

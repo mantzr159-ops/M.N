@@ -9,9 +9,18 @@
   const $ = (s) => document.querySelector(s);
   const fmt = (n) => `${n.toLocaleString("ar-SA")} ${CURRENCY}`;
   const byId = (id) => PRODUCTS.find((p) => p.id === id);
+  const media = (p) => p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : esc(p.emoji || "📦");
+  const inStock = (p) => p.stock == null || p.stock === "" || +p.stock > 0;
+  const maxQty = (p) => (p.stock == null || p.stock === "" ? 99 : Math.min(99, +p.stock));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const state = { category: "all", query: "", sort: "default", cart: loadCart() };
+  if (!CATEGORIES.some((c) => c.id === "all")) CATEGORIES.unshift({ id: "all", name: "الكل" });
+  for (const id of Object.keys(state.cart)) {
+    const p = byId(+id);
+    if (!p || !inStock(p)) delete state.cart[id];
+    else state.cart[id] = Math.min(state.cart[id], maxQty(p));
+  }
 
   function loadCart() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
@@ -52,9 +61,9 @@
     $("#empty").hidden = list.length > 0;
     $("#grid").innerHTML = list.map((p) => `
       <article class="card">
-        <button class="card__media" style="--tile:${p.color}" data-view="${p.id}" aria-label="عرض ${esc(p.name)}">
-          <span>${p.emoji}</span>
-          ${p.oldPrice ? `<em class="tag">خصم ${Math.round((1 - p.price / p.oldPrice) * 100)}٪</em>` : ""}
+        <button class="card__media" style="--tile:${esc(p.color || "#eef")}" data-view="${p.id}" aria-label="عرض ${esc(p.name)}">
+          <span>${media(p)}</span>
+          ${!inStock(p) ? `<em class="tag tag--out">نفدت الكمية</em>` : p.oldPrice ? `<em class="tag">خصم ${Math.round((1 - p.price / p.oldPrice) * 100)}٪</em>` : ""}
         </button>
         <div class="card__body">
           <h3>${esc(p.name)}</h3>
@@ -63,7 +72,7 @@
             <b>${fmt(p.price)}</b>
             ${p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : ""}
           </div>
-          <button class="btn btn--primary btn--block" data-add="${p.id}">أضف إلى السلة</button>
+          <button class="btn btn--primary btn--block" data-add="${p.id}" ${inStock(p) ? "" : "disabled"}>${inStock(p) ? "أضف إلى السلة" : "غير متوفر"}</button>
         </div>
       </article>`).join("");
   }
@@ -82,7 +91,11 @@
   }
 
   function addToCart(id, qty = 1) {
-    state.cart[id] = (state.cart[id] || 0) + qty;
+    const p = byId(id);
+    if (!p || !inStock(p)) return;
+    const next = Math.min((state.cart[id] || 0) + qty, maxQty(p));
+    if (next === state.cart[id]) { toast(`الكمية المتاحة من «${p.name}» هي ${maxQty(p)} فقط`); return; }
+    state.cart[id] = next;
     saveCart();
     renderCart();
     toast(`تمت إضافة «${byId(id).name}» إلى السلة`);
@@ -90,7 +103,7 @@
 
   function setQty(id, qty) {
     if (qty <= 0) delete state.cart[id];
-    else state.cart[id] = Math.min(qty, 99);
+    else state.cart[id] = Math.min(qty, byId(id) ? maxQty(byId(id)) : 99);
     saveCart();
     renderCart();
   }
@@ -104,7 +117,7 @@
     $("#cartItems").innerHTML = lines.length
       ? lines.map(({ product: p, qty }) => `
         <div class="line">
-          <div class="line__media" style="--tile:${p.color}">${p.emoji}</div>
+          <div class="line__media" style="--tile:${esc(p.color || "#eef")}">${media(p)}</div>
           <div class="line__info">
             <b>${esc(p.name)}</b>
             <span>${fmt(p.price)}</span>
@@ -148,7 +161,7 @@
     const cat = CATEGORIES.find((c) => c.id === p.category);
     openModal(`
       <div class="detail">
-        <div class="detail__media" style="--tile:${p.color}">${p.emoji}</div>
+        <div class="detail__media" style="--tile:${esc(p.color || "#eef")}">${media(p)}</div>
         <div class="detail__info">
           <small>${esc(cat ? cat.name : "")}</small>
           <h2>${esc(p.name)}</h2>
@@ -161,7 +174,7 @@
               <span id="detailQty">1</span>
               <button type="button" data-step="1" aria-label="زيادة">+</button>
             </div>
-            <button class="btn btn--primary" data-add-detail="${p.id}">أضف إلى السلة</button>
+            <button class="btn btn--primary" data-add-detail="${p.id}" ${inStock(p) ? "" : "disabled"}>${inStock(p) ? "أضف إلى السلة" : "غير متوفر"}</button>
           </div>
         </div>
       </div>`);
@@ -251,7 +264,8 @@
     else if (d.remove) setQty(+d.remove, 0);
     else if (d.step) {
       const el = $("#detailQty");
-      el.textContent = Math.max(1, Math.min(99, +el.textContent + +d.step));
+      const max = maxQty(byId(+$("[data-add-detail]").dataset.addDetail));
+      el.textContent = Math.max(1, Math.min(max, +el.textContent + +d.step));
     } else if (d.addDetail) { addToCart(+d.addDetail, +$("#detailQty").textContent); modal.close(); }
     else if ("close" in d) modal.close();
   });
@@ -269,6 +283,11 @@
 
   $("#search").addEventListener("input", (e) => { state.query = e.target.value; renderGrid(); });
   $("#sort").addEventListener("change", (e) => { state.sort = e.target.value; renderGrid(); });
+
+  // إعادة التحميل عند تعديل المنتجات من لوحة التحكم في تبويب آخر
+  window.addEventListener("storage", (e) => {
+    if (e.key === "mn-products" || e.key === "mn-categories") location.reload();
+  });
 
   $("#year").textContent = new Date().getFullYear();
   renderCategories();

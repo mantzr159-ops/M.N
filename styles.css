@@ -115,7 +115,10 @@ button { cursor: pointer; }
   position: relative; border: 0; background: var(--tile); aspect-ratio: 4/3; display: grid; place-items: center; font-size: 4rem;
 }
 .line__media, .detail__media { background: var(--tile); }
-.card__media span { transition: transform .25s; }
+.card__media span { transition: transform .25s; display: grid; place-items: center; width: 100%; height: 100%; }
+.card__media img, .line__media img, .detail__media img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.line__media, .detail__media { overflow: hidden; }
+.tag--out { background: var(--muted); }
 .card:hover .card__media span { transform: scale(1.12) rotate(-4deg); }
 .tag {
   position: absolute; top: 10px; inset-inline-start: 10px; font-style: normal;
@@ -211,3 +214,4 @@ button { cursor: pointer; }
   .detail__media { font-size: 5rem; aspect-ratio: 16/10; }
   .modal { padding: 22px 16px; }
 }
+.footer a { color: var(--primary); }
