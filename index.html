@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>متجر M.N</title>
+  <meta name="description" content="متجر إلكتروني عربي: تصفح المنتجات، أضفها إلى السلة، وأكمل طلبك بسهولة.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header__inner">
+      <a href="#" class="logo" aria-label="الصفحة الرئيسية">M.N<span>متجر</span></a>
+      <label class="search">
+        <span class="sr-only">ابحث عن منتج</span>
+        <input id="search" type="search" placeholder="ابحث عن منتج…" autocomplete="off">
+      </label>
+      <button class="cart-btn" id="openCart" aria-label="فتح السلة">
+        🛒 <span>السلة</span>
+        <b class="badge" id="cartCount">0</b>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero__inner">
+        <div>
+          <h1>كل ما تحتاجه في مكان واحد</h1>
+          <p>منتجات مختارة بعناية، أسعار منافسة، وشحن مجاني للطلبات فوق 200 ر.س</p>
+          <a href="#products" class="btn btn--light">تسوّق الآن</a>
+        </div>
+        <ul class="perks">
+          <li>🚚 شحن سريع</li>
+          <li>🔒 دفع آمن</li>
+          <li>↩️ إرجاع خلال 14 يوم</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="container" id="products">
+      <div class="toolbar">
+        <div class="chips" id="categories" role="tablist" aria-label="التصنيفات"></div>
+        <label class="sort">
+          ترتيب:
+          <select id="sort">
+            <option value="default">الأكثر شيوعًا</option>
+            <option value="price-asc">السعر: من الأقل</option>
+            <option value="price-desc">السعر: من الأعلى</option>
+            <option value="rating">الأعلى تقييمًا</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="empty" id="empty" hidden>لا توجد منتجات مطابقة لبحثك.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">© <span id="year"></span> متجر M.N — جميع الحقوق محفوظة</div>
+  </footer>
+
+  <!-- Cart drawer -->
+  <div class="overlay" id="overlay" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="سلة التسوق">
+    <div class="drawer__head">
+      <h2>سلة التسوق</h2>
+      <button class="icon-btn" id="closeCart" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="drawer__body" id="cartItems"></div>
+    <div class="drawer__foot">
+      <div class="row"><span>المجموع الفرعي</span><b id="subtotal">0</b></div>
+      <div class="row"><span>الشحن</span><b id="shipping">0</b></div>
+      <div class="row total"><span>الإجمالي</span><b id="total">0</b></div>
+      <button class="btn btn--primary btn--block" id="checkoutBtn">إتمام الطلب</button>
+    </div>
+  </aside>
+
+  <!-- Product / checkout modal -->
+  <dialog class="modal" id="modal">
+    <button class="icon-btn modal__close" data-close aria-label="إغلاق">✕</button>
+    <div id="modalContent"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="products.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
