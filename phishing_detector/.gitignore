@@ -1,0 +1,11 @@
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Render artifacts (regenerated from build_deck.js / evaluate.py)
+slides/*.pdf
+slides/slide-*.jpg
