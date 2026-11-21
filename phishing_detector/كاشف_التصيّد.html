@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1B2D">
+<title>كاشف روابط التصيّد</title>
+<style>
+  :root{
+    --bg:#0F1B2D; --panel:#17233D; --panel2:#1B2A4A; --teal:#2DD4BF;
+    --light:#F1F5F9; --muted:#94A3B8; --red:#EF4444; --green:#22C55E; --line:#2b3a5a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--light);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Naskh Arabic",Tahoma,Arial,sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    padding:max(18px,env(safe-area-inset-top)) 16px 28px;
+  }
+  .app{width:100%;max-width:460px}
+  header{display:flex;align-items:center;gap:12px;margin:8px 2px 20px}
+  .logo{width:46px;height:46px;border-radius:50%;border:3px solid var(--teal);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .logo i{width:16px;height:16px;border-radius:50%;background:var(--teal)}
+  header h1{font-size:19px;margin:0;line-height:1.3}
+  header p{font-size:12px;color:var(--muted);margin:2px 0 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px}
+  label{font-size:14px;color:var(--muted);display:block;margin-bottom:8px}
+  .row{display:flex;gap:8px}
+  input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--light);
+    border-radius:12px;padding:13px 14px;font-size:15px;direction:ltr;text-align:left;outline:none}
+  input:focus{border-color:var(--teal)}
+  button{background:var(--teal);color:#07211c;border:0;border-radius:12px;padding:0 20px;
+    font-size:16px;font-weight:700;cursor:pointer}
+  button:active{opacity:.85}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{font-size:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    padding:7px 11px;border-radius:20px;cursor:pointer;direction:ltr}
+  .chip:active{border-color:var(--teal)}
+  /* النتيجة */
+  #result{display:none;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .verdict{display:flex;align-items:center;gap:12px}
+  .badge{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:26px;flex:0 0 auto}
+  .verdict h2{margin:0;font-size:21px}
+  .verdict .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .safe .badge{background:rgba(34,197,94,.15)} .safe h2{color:var(--green)}
+  .phish .badge{background:rgba(239,68,68,.15)} .phish h2{color:var(--red)}
+  .meter{height:10px;border-radius:6px;background:var(--bg);overflow:hidden;margin:16px 0 6px}
+  .meter i{display:block;height:100%;border-radius:6px;transition:width .4s ease}
+  .meterlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+  .reasons{margin-top:16px}
+  .reasons h3{font-size:13px;color:var(--muted);margin:0 0 8px;font-weight:600}
+  .reasons ul{list-style:none;margin:0;padding:0}
+  .reasons li{display:flex;gap:9px;align-items:flex-start;font-size:14px;
+    background:var(--panel2);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+  .reasons li::before{content:"⚠️";flex:0 0 auto}
+  .clean{font-size:14px;color:var(--green);display:flex;gap:8px;align-items:center}
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.7}
+  .offline{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    border-radius:20px;padding:4px 11px;font-size:11px;color:var(--teal);margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><i></i></div>
+    <div>
+      <h1>كاشف روابط التصيّد</h1>
+      <p>يعمل داخل جهازك — بدون إنترنت</p>
+    </div>
+  </header>
+
+  <div style="text-align:center"><span class="offline">🔒 كشف محلي offline · لا يُرسل أي رابط</span></div>
+
+  <div class="card">
+    <label for="url">الصقي الرابط المراد فحصه</label>
+    <div class="row">
+      <input id="url" type="text" inputmode="url" placeholder="https://example.com/login" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button id="go">افحص</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="card" id="result">
+    <div class="verdict" id="verdict">
+      <div class="badge" id="badge"></div>
+      <div>
+        <h2 id="vtitle"></h2>
+        <div class="sub" id="vsub"></div>
+      </div>
+    </div>
+    <div class="meter"><i id="bar"></i></div>
+    <div class="meterlbl"><span>احتمال التصيّد</span><span id="pct"></span></div>
+    <div class="reasons" id="reasons"></div>
+  </div>
+
+  <footer>
+    نموذج Logistic Regression على الجهاز · دقّة ~95%<br>
+    زهرة محمد · إشراف أ. صلاح البرماني
+  </footer>
+</div>
+
+<script>
+window.MODEL = {
+  "feature_names": [
+    "url_length",
+    "hostname_length",
+    "path_length",
+    "num_dots",
+    "num_hyphens",
+    "num_at",
+    "num_question",
+    "num_equals",
+    "num_ampersand",
+    "num_underscore",
+    "num_percent",
+    "num_slash",
+    "num_digits",
+    "digit_ratio",
+    "letter_ratio",
+    "num_subdomains",
+    "has_ip",
+    "has_port",
+    "has_https",
+    "has_at_symbol",
+    "double_slash_redirect",
+    "num_suspicious_words",
+    "is_shortened",
+    "brand_in_subdomain_or_path",
+    "hostname_entropy",
+    "tld_suspicious"
+  ],
+  "scaler_mean": [
+    44.698125,
+    15.629375,
+    14.47145833,
+    1.97541667,
+    0.295,
+    0.06270833,
+    0.37833333,
+    0.39958333,
+    0.02125,
+    0.0,
+    0.0,
+    3.68354167,
+    3.00791667,
+    0.05492727,
+    0.76068004,
+    0.64354167,
+    0.065625,
+    0.0,
+    0.679375,
+    0.06270833,
+    0.0,
+    0.86666667,
+    0.04229167,
+    0.31770833,
+    3.26938688,
+    0.25916667
+  ],
+  "scaler_scale": [
+    18.18063062,
+    5.57347995,
+    12.59479133,
+    0.90658461,
+    0.57378132,
+    0.24243762,
+    0.48497136,
+    0.53142873,
+    0.14421663,
+    1.0,
+    1.0,
+    1.06968646,
+    3.9154528,
+    0.06334018,
+    0.06588376,
+    0.70046113,
+    0.24762544,
+    1.0,
+    0.46671684,
+    0.24243762,
+    1.0,
+    0.87376898,
+    0.20125377,
+    0.46558538,
+    0.43105583,
+    0.43817725
+  ],
+  "coef": [
+    -0.24444506,
+    2.0707349,
+    -3.42377682,
+    5.01722357,
+    -0.33655193,
+    -0.56711853,
+    -0.00832662,
+    -0.12461113,
+    -0.431183,
+    0.0,
+    0.0,
+    1.77952265,
+    0.45108517,
+    1.36089624,
+    0.92124271,
+    -5.43813786,
+    0.15695351,
+    0.0,
+    0.10683832,
+    -0.56711853,
+    0.0,
+    0.9864754,
+    -0.10636373,
+    1.16312965,
+    -0.40181348,
+    0.66425354
+  ],
+  "intercept": 0.19682816,
+  "suspicious_words": [
+    "login",
+    "signin",
+    "secure",
+    "account",
+    "update",
+    "verify",
+    "confirm",
+    "webscr",
+    "banking",
+    "bank",
+    "password",
+    "credential",
+    "ebayisapi",
+    "free",
+    "bonus",
+    "gift",
+    "win",
+    "prize",
+    "alert",
+    "suspend",
+    "unlock",
+    "recover",
+    "validation",
+    "authentication",
+    "wallet",
+    "invoice"
+  ],
+  "shorteners": [
+    "bit.ly",
+    "goo.gl",
+    "tinyurl.com",
+    "ow.ly",
+    "t.co",
+    "is.gd",
+    "buff.ly",
+    "adf.ly",
+    "cutt.ly",
+    "shorte.st",
+    "rebrand.ly",
+    "bit.do",
+    "rb.gy"
+  ],
+  "brands": [
+    "paypal",
+    "instagram",
+    "facebook",
+    "apple",
+    "microsoft",
+    "google",
+    "amazon",
+    "netflix",
+    "whatsapp",
+    "telegram",
+    "snapchat",
+    "bank"
+  ],
+  "suspicious_tlds": [
+    "cf",
+    "click",
+    "country",
+    "download",
+    "ga",
+    "gq",
+    "info",
+    "link",
+    "ml",
+    "racing",
+    "stream",
+    "tk",
+    "top",
+    "work",
+    "xyz",
+    "zip"
+  ],
+  "metrics": {
+    "accuracy": 0.9542,
+    "f1": 0.9541
+  }
+};
+
+</script>
+<script>
+/*
+ * detector.js — استخراج الخصائص + النموذج الخفيف، منقول بدقّة من features.py
+ * يعمل في المتصفح وفي Node (كلاهما فيه WHATWG URL).
+ * MODEL يُحقن من model.json. دالة detect(url) ترجّع {label, prob, reasons, features}.
+ */
+(function (root) {
+  "use strict";
+
+  function safeParse(rawUrl) {
+    // يطابق _safe_parse في بايثون: أضف http:// إن غاب السكيم
+    var u = rawUrl;
+    if (u.indexOf("://") === -1) u = "http://" + u;
+    try {
+      var p = new URL(u);
+      // WHATWG يحوّل المسار الفارغ إلى "/" بينما urlparse في بايثون يتركه "".
+      // نطابق بايثون: لو لا يوجد "/" صريح بعد المضيف، يكون المسار فارغاً.
+      var path = p.pathname || "";
+      var afterScheme = u.split("://")[1] || "";
+      if (path === "/" && afterScheme.indexOf("/") === -1) path = "";
+      return {
+        hostname: p.hostname || "",     // WHATWG يزيل userinfo والبورت ويحوّل لحروف صغيرة
+        path: path,
+        scheme: (p.protocol || "").replace(":", "").toLowerCase(),
+        port: p.port || "",
+      };
+    } catch (e) {
+      return { hostname: "", path: "", scheme: "", port: "" };
+    }
+  }
+
+  function countChar(s, ch) {
+    var n = 0;
+    for (var i = 0; i < s.length; i++) if (s[i] === ch) n++;
+    return n;
+  }
+
+  var IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+
+  function shannonEntropy(text) {
+    if (!text) return 0.0;
+    var counts = {}, i;
+    for (i = 0; i < text.length; i++) counts[text[i]] = (counts[text[i]] || 0) + 1;
+    var len = text.length, h = 0.0;
+    for (var k in counts) {
+      if (!counts.hasOwnProperty(k)) continue;
+      var pr = counts[k] / len;
+      h -= pr * (Math.log(pr) / Math.log(2));
+    }
+    return h;
+  }
+
+  function brandSpoof(hostname, urlLower, brands) {
+    for (var i = 0; i < brands.length; i++) {
+      var brand = brands[i];
+      if (urlLower.indexOf(brand) !== -1) {
+        var parts = hostname.split(".");
+        var base = parts.length >= 2 ? parts.slice(-2).join(".") : hostname;
+        if (base.indexOf(brand) === -1) return 1;
+      }
+    }
+    return 0;
+  }
+
+  function suspiciousTld(hostname, tlds) {
+    if (!hostname || hostname.indexOf(".") === -1) return 0;
+    var tld = hostname.split(".").pop().toLowerCase();
+    return tlds.indexOf(tld) !== -1 ? 1 : 0;
+  }
+
+  // تُرجع القيم بنفس ترتيب MODEL.feature_names
+  function extractFeatures(rawUrl, M) {
+    var url = (rawUrl || "").trim();
+    var p = safeParse(url);
+    var hostname = p.hostname, path = p.path;
+    var urlLower = url.toLowerCase();
+
+    var digits = 0, letters = 0, i, c;
+    for (i = 0; i < url.length; i++) {
+      c = url[i];
+      if (c >= "0" && c <= "9") digits++;
+      else if (/[a-zA-Z]/.test(c)) letters++;
+    }
+    var n = url.length || 1;
+
+    var susp = 0, w;
+    for (i = 0; i < M.suspicious_words.length; i++)
+      if (urlLower.indexOf(M.suspicious_words[i]) !== -1) susp++;
+    var shortened = 0;
+    for (i = 0; i < M.shorteners.length; i++)
+      if (urlLower.indexOf(M.shorteners[i]) !== -1) { shortened = 1; break; }
+
+    var f = {
+      url_length: url.length,
+      hostname_length: hostname.length,
+      path_length: path.length,
+      num_dots: countChar(url, "."),
+      num_hyphens: countChar(url, "-"),
+      num_at: countChar(url, "@"),
+      num_question: countChar(url, "?"),
+      num_equals: countChar(url, "="),
+      num_ampersand: countChar(url, "&"),
+      num_underscore: countChar(url, "_"),
+      num_percent: countChar(url, "%"),
+      num_slash: countChar(url, "/"),
+      num_digits: digits,
+      digit_ratio: digits / n,
+      letter_ratio: letters / n,
+      num_subdomains: Math.max(countChar(hostname, ".") - 1, 0),
+      has_ip: IPV4.test(hostname) ? 1 : 0,
+      has_port: p.port ? 1 : 0,
+      has_https: p.scheme === "https" ? 1 : 0,
+      has_at_symbol: url.indexOf("@") !== -1 ? 1 : 0,
+      double_slash_redirect: url.lastIndexOf("//") > 7 ? 1 : 0,
+      num_suspicious_words: susp,
+      is_shortened: shortened,
+      brand_in_subdomain_or_path: brandSpoof(hostname, urlLower, M.brands),
+      hostname_entropy: Math.round(shannonEntropy(hostname) * 1000) / 1000,
+      tld_suspicious: suspiciousTld(hostname, M.suspicious_tlds),
+    };
+    return f;
+  }
+
+  function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+
+  // استدلال الانحدار اللوجستي: z = (x-mean)/scale ثم sigmoid(coef·z + intercept)
+  function predictProb(features, M) {
+    var names = M.feature_names, z = M.intercept;
+    for (var i = 0; i < names.length; i++) {
+      var x = features[names[i]];
+      var scaled = (x - M.scaler_mean[i]) / M.scaler_scale[i];
+      z += M.coef[i] * scaled;
+    }
+    return sigmoid(z);
+  }
+
+  function reasonsFor(f) {
+    var r = [];
+    if (f.has_ip) r.push("المضيف عنوان IP بدل اسم نطاق");
+    if (f.has_at_symbol) r.push("يحتوي رمز @ لإخفاء الوجهة الحقيقية");
+    if (f.num_suspicious_words > 0) r.push("كلمات خداع (" + f.num_suspicious_words + ")");
+    if (f.brand_in_subdomain_or_path) r.push("انتحال علامة تجارية في مكان خادع");
+    if (f.tld_suspicious) r.push("نطاق علوي مشبوه (مثل ‎.tk ‎.xyz)");
+    if (f.is_shortened) r.push("رابط مختصر يخفي الوجهة");
+    if (f.num_hyphens >= 3) r.push("شرطات كثيرة (" + f.num_hyphens + ")");
+    if (!f.has_https) r.push("لا يستخدم HTTPS");
+    return r;
+  }
+
+  function detect(url, M) {
+    var f = extractFeatures(url, M);
+    var prob = predictProb(f, M);
+    return {
+      label: prob >= 0.5 ? 1 : 0,
+      prob: prob,
+      reasons: reasonsFor(f),
+      features: f,
+    };
+  }
+
+  var api = { extractFeatures: extractFeatures, predictProb: predictProb, detect: detect };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.Detector = api;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+  var M = window.MODEL;
+  var $ = function(id){ return document.getElementById(id); };
+
+  var examples = [
+    "https://www.instagram.com/",
+    "http://instagram.secure-login.tk/verify",
+    "http://192.168.0.5/paypal/login.php",
+    "http://paypal.com@evil.xyz/login"
+  ];
+  var chips = $("chips");
+  examples.forEach(function(ex){
+    var c = document.createElement("span");
+    c.className = "chip"; c.textContent = ex.length>34?ex.slice(0,32)+"…":ex;
+    c.onclick = function(){ $("url").value = ex; run(); };
+    chips.appendChild(c);
+  });
+
+  function run(){
+    var url = $("url").value.trim();
+    if(!url){ $("result").style.display="none"; return; }
+    var d = Detector.detect(url, M);
+    var res = $("result"), verdict = $("verdict");
+    var phish = d.label === 1;
+    verdict.className = "verdict " + (phish ? "phish" : "safe");
+    $("badge").textContent = phish ? "⚠️" : "✓";
+    $("vtitle").textContent = phish ? "تصيّد مُحتمل" : "رابط آمن";
+    var conf = phish ? d.prob : (1 - d.prob);
+    $("vsub").textContent = "ثقة الكشف " + (conf*100).toFixed(1) + "%";
+    var pct = (d.prob*100).toFixed(1) + "%";
+    $("pct").textContent = pct;
+    var bar = $("bar");
+    bar.style.width = pct;
+    bar.style.background = phish ? "var(--red)" : "var(--green)";
+
+    var rbox = $("reasons");
+    if(phish && d.reasons.length){
+      var ul = "<h3>مؤشرات مرصودة</h3><ul>";
+      d.reasons.forEach(function(r){ ul += "<li>"+r+"</li>"; });
+      rbox.innerHTML = ul + "</ul>";
+    } else if(!phish){
+      rbox.innerHTML = '<div class="clean">✓ لم تُرصد مؤشرات تصيّد واضحة في بنية الرابط.</div>';
+    } else {
+      rbox.innerHTML = "";
+    }
+    res.style.display = "block";
+  }
+
+  $("go").onclick = run;
+  $("url").addEventListener("keydown", function(e){ if(e.key==="Enter") run(); });
+</script>
+</body>
+</html>
