@@ -50,7 +50,7 @@ function statCard(s, x, y, w, number, label, accent = C.teal) {
   ], { x: 3.1, y: 5.5, w: 7.1, h: 0.45, fontFace: FONT, fontSize: 16, align: "center", isTextBox: true, margin: 0 });
   s.addText([
     { text: "Supervisor: ", options: { color: C.muted } },
-    { text: "Prof. Salah Al-Barmani", options: { color: C.teal, bold: true } },
+    { text: "Prof. Salah Albermany", options: { color: C.teal, bold: true } },
   ], { x: 3.1, y: 5.98, w: 7.1, h: 0.45, fontFace: FONT, fontSize: 15, align: "center", isTextBox: true, margin: 0 });
 })();
 
@@ -277,7 +277,7 @@ function statCard(s, x, y, w, number, label, accent = C.teal) {
     { text: "Study adversarial phishing and model robustness.", options: { bullet: { indent: 15 }, breakLine: true } },
     { text: "Deploy as an API or a browser extension for real-time protection.", options: { bullet: { indent: 15 }, breakLine: false } },
   ], { x: 1.9, y: 3.25, w: 9.5, h: 2.9, fontFace: FONT, fontSize: 15.5, color: C.light, align: "left", isTextBox: true, paraSpaceAfter: 10 });
-  s.addText("Thank you — Zahra Mohammed  ·  Supervisor: Prof. Salah Al-Barmani",
+  s.addText("Thank you — Zahra Mohammed  ·  Supervisor: Prof. Salah Albermany",
     { x: 1, y: 6.55, w: 11.3, h: 0.5, fontFace: FONT, fontSize: 15, bold: true, color: C.teal, align: "center", isTextBox: true });
 })();
 
